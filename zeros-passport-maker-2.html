@@ -1,0 +1,1265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Zero's Passport Size Image Maker</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --black: #0a0a0a;
+      --white: #f5f5f0;
+      --gray-dark: #1a1a1a;
+      --gray-mid: #2e2e2e;
+      --gray-light: #aaaaaa;
+      --accent: #ffffff;
+      --border: #333333;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: var(--black);
+      color: var(--white);
+      font-family: 'Courier Prime', monospace;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Grain overlay */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 9999;
+      opacity: 0.4;
+    }
+
+    /* Header */
+    header {
+      border-bottom: 1px solid var(--border);
+      padding: 28px 48px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: relative;
+    }
+
+    header::after {
+      content: '';
+      position: absolute;
+      bottom: -3px;
+      left: 0;
+      width: 100%;
+      height: 1px;
+      background: var(--border);
+    }
+
+    .logo {
+      display: flex;
+      flex-direction: column;
+      line-height: 1;
+    }
+
+    .logo-zero {
+      font-family: 'Playfair Display', serif;
+      font-size: 13px;
+      font-weight: 400;
+      letter-spacing: 6px;
+      color: var(--gray-light);
+      text-transform: uppercase;
+    }
+
+    .logo-main {
+      font-family: 'Playfair Display', serif;
+      font-size: 22px;
+      font-weight: 900;
+      letter-spacing: 2px;
+      color: var(--white);
+      text-transform: uppercase;
+    }
+
+    .logo-sub {
+      font-family: 'Courier Prime', monospace;
+      font-size: 10px;
+      letter-spacing: 4px;
+      color: var(--gray-light);
+      text-transform: uppercase;
+      margin-top: 2px;
+    }
+
+    .header-badge {
+      font-size: 10px;
+      letter-spacing: 3px;
+      color: var(--gray-light);
+      border: 1px solid var(--border);
+      padding: 6px 14px;
+      text-transform: uppercase;
+    }
+
+    /* Hero */
+    .hero {
+      padding: 80px 48px 60px;
+      border-bottom: 1px solid var(--border);
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 60px;
+      align-items: center;
+    }
+
+    .hero-text h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(42px, 5vw, 72px);
+      font-weight: 900;
+      line-height: 1.05;
+      letter-spacing: -1px;
+      margin-bottom: 24px;
+    }
+
+    .hero-text h1 span {
+      display: block;
+      color: var(--gray-light);
+      font-weight: 400;
+      font-style: italic;
+    }
+
+    .hero-text p {
+      font-size: 13px;
+      line-height: 1.8;
+      color: var(--gray-light);
+      letter-spacing: 1px;
+      max-width: 380px;
+    }
+
+    .hero-stats {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      border: 1px solid var(--border);
+    }
+
+    .stat-row {
+      display: flex;
+      align-items: center;
+      padding: 20px 28px;
+      border-bottom: 1px solid var(--border);
+      gap: 20px;
+    }
+
+    .stat-row:last-child { border-bottom: none; }
+
+    .stat-num {
+      font-family: 'Playfair Display', serif;
+      font-size: 36px;
+      font-weight: 900;
+      color: var(--white);
+      min-width: 60px;
+    }
+
+    .stat-label {
+      font-size: 11px;
+      letter-spacing: 2px;
+      color: var(--gray-light);
+      text-transform: uppercase;
+      line-height: 1.4;
+    }
+
+    /* Upload Section */
+    .upload-section {
+      padding: 80px 48px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .section-label {
+      font-size: 10px;
+      letter-spacing: 5px;
+      color: var(--gray-light);
+      text-transform: uppercase;
+      margin-bottom: 40px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .section-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    .upload-zone {
+      border: 1px dashed var(--border);
+      padding: 80px 40px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      position: relative;
+      background: var(--gray-dark);
+    }
+
+    .upload-zone:hover,
+    .upload-zone.dragover {
+      border-color: var(--white);
+      background: var(--gray-mid);
+    }
+
+    .upload-zone input[type="file"] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+      width: 100%;
+      height: 100%;
+    }
+
+    .upload-icon {
+      width: 64px;
+      height: 64px;
+      border: 1px solid var(--border);
+      margin: 0 auto 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .upload-icon::before {
+      content: '';
+      position: absolute;
+      inset: 4px;
+      border: 1px dashed var(--gray-light);
+    }
+
+    .upload-icon svg {
+      width: 24px;
+      height: 24px;
+      stroke: var(--gray-light);
+    }
+
+    .upload-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      letter-spacing: 1px;
+    }
+
+    .upload-desc {
+      font-size: 11px;
+      letter-spacing: 2px;
+      color: var(--gray-light);
+      text-transform: uppercase;
+    }
+
+    /* Preview & Processing */
+    .preview-section {
+      padding: 60px 48px;
+      border-bottom: 1px solid var(--border);
+      display: none;
+    }
+
+    .preview-section.visible { display: block; }
+
+    .preview-grid {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      gap: 60px;
+      align-items: start;
+    }
+
+    .original-preview {
+      border: 1px solid var(--border);
+    }
+
+    .original-preview img {
+      width: 100%;
+      display: block;
+      filter: grayscale(20%);
+    }
+
+    .original-label {
+      padding: 12px 16px;
+      font-size: 10px;
+      letter-spacing: 3px;
+      color: var(--gray-light);
+      text-transform: uppercase;
+      border-top: 1px solid var(--border);
+    }
+
+    .controls {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .control-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 28px;
+      font-weight: 700;
+    }
+
+    .control-desc {
+      font-size: 12px;
+      color: var(--gray-light);
+      line-height: 1.8;
+      letter-spacing: 1px;
+    }
+
+    /* Size selector */
+    .size-options {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      border: 1px solid var(--border);
+    }
+
+    .size-option {
+      display: flex;
+      align-items: center;
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      transition: background 0.2s;
+      gap: 16px;
+    }
+
+    .size-option:last-child { border-bottom: none; }
+    .size-option:hover { background: var(--gray-mid); }
+    .size-option.selected { background: var(--white); color: var(--black); }
+    .size-option.selected .size-dim { color: var(--gray-mid); }
+
+    .size-option input[type="radio"] { display: none; }
+
+    .size-indicator {
+      width: 16px;
+      height: 20px;
+      border: 1.5px solid currentColor;
+      flex-shrink: 0;
+      position: relative;
+    }
+
+    .size-option.selected .size-indicator::after {
+      content: '';
+      position: absolute;
+      inset: 2px;
+      background: var(--black);
+    }
+
+    .size-name { font-size: 13px; letter-spacing: 1px; flex: 1; font-weight: 700; }
+    .size-dim { font-size: 11px; color: var(--gray-light); letter-spacing: 1px; }
+
+    /* Process button */
+    .btn-process {
+      background: var(--white);
+      color: var(--black);
+      border: none;
+      padding: 20px 40px;
+      font-family: 'Courier Prime', monospace;
+      font-size: 12px;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      position: relative;
+      overflow: hidden;
+      font-weight: 700;
+    }
+
+    .btn-process:hover {
+      background: var(--black);
+      color: var(--white);
+      border: 1px solid var(--white);
+    }
+
+    .btn-process:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    /* Progress */
+    .progress-bar-wrap {
+      border: 1px solid var(--border);
+      height: 3px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: var(--white);
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+
+    .progress-text {
+      font-size: 11px;
+      letter-spacing: 2px;
+      color: var(--gray-light);
+      margin-top: 8px;
+      text-transform: uppercase;
+    }
+
+    /* Results */
+    .results-section {
+      padding: 60px 48px;
+      display: none;
+    }
+
+    .results-section.visible { display: block; }
+
+    .passport-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-top: 40px;
+    }
+
+    .passport-card {
+      border: 1px solid var(--border);
+      background: var(--gray-dark);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .passport-card img {
+      width: 100%;
+      display: block;
+    }
+
+    .passport-card-footer {
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-top: 1px solid var(--border);
+    }
+
+    .passport-card-num {
+      font-size: 10px;
+      letter-spacing: 2px;
+      color: var(--gray-light);
+      text-transform: uppercase;
+    }
+
+    /* Sheet preview */
+    .sheet-container {
+      margin-top: 48px;
+      border: 1px solid var(--border);
+      padding: 32px;
+      background: var(--gray-dark);
+    }
+
+    .sheet-label {
+      font-size: 10px;
+      letter-spacing: 4px;
+      color: var(--gray-light);
+      text-transform: uppercase;
+      margin-bottom: 24px;
+    }
+
+    #passportSheet {
+      background: white;
+      display: inline-block;
+    }
+
+    /* Download buttons */
+    .download-bar {
+      margin-top: 40px;
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .btn-download {
+      background: transparent;
+      color: var(--white);
+      border: 1px solid var(--white);
+      padding: 16px 32px;
+      font-family: 'Courier Prime', monospace;
+      font-size: 11px;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-weight: 700;
+    }
+
+    .btn-download:hover {
+      background: var(--white);
+      color: var(--black);
+    }
+
+    .btn-download.primary {
+      background: var(--white);
+      color: var(--black);
+    }
+
+    .btn-download.primary:hover {
+      background: transparent;
+      color: var(--white);
+    }
+
+    .btn-reset {
+      background: transparent;
+      color: var(--gray-light);
+      border: 1px solid var(--border);
+      padding: 16px 32px;
+      font-family: 'Courier Prime', monospace;
+      font-size: 11px;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-reset:hover { color: var(--white); border-color: var(--white); }
+
+    /* Footer */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 28px 48px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .footer-text {
+      font-size: 10px;
+      letter-spacing: 3px;
+      color: var(--gray-light);
+      text-transform: uppercase;
+    }
+
+    .footer-brand {
+      font-family: 'Playfair Display', serif;
+      font-size: 14px;
+      color: var(--gray-light);
+      font-style: italic;
+    }
+
+    /* Error */
+    .error-msg {
+      font-size: 12px;
+      color: #ff6b6b;
+      letter-spacing: 1px;
+      padding: 12px 16px;
+      border: 1px solid #ff6b6b33;
+      display: none;
+    }
+
+    .error-msg.visible { display: block; }
+
+    /* Canvas hidden */
+    #bgCanvas, #outputCanvas { display: none; }
+
+    /* Spinner */
+    .spinner {
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      border: 2px solid var(--black);
+      border-top-color: transparent;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      vertical-align: middle;
+      margin-right: 8px;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Background color picker */
+    .bg-picker-label {
+      font-size: 10px;
+      letter-spacing: 3px;
+      color: var(--gray-light);
+      text-transform: uppercase;
+      margin-bottom: 12px;
+      display: block;
+    }
+
+    .bg-color-options {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .bg-color-btn {
+      width: 44px;
+      height: 44px;
+      border: 2px solid var(--border);
+      cursor: pointer;
+      position: relative;
+      transition: border-color 0.2s, transform 0.15s;
+      flex-shrink: 0;
+    }
+
+    .bg-color-btn:hover { transform: scale(1.1); border-color: var(--gray-light); }
+    .bg-color-btn.active { border-color: var(--white); box-shadow: 0 0 0 2px var(--white); }
+
+    .bg-color-btn[data-color="white"] { background: #ffffff; }
+    .bg-color-btn[data-color="blue"]  { background: #4a90d9; }
+    .bg-color-btn[data-color="lightblue"] { background: #add8e6; }
+    .bg-color-btn[data-color="gray"]  { background: #c0c0c0; }
+    .bg-color-btn[data-color="custom"] {
+      background: linear-gradient(135deg, #ff6b6b 0%, #ffd93d 25%, #6bcb77 50%, #4d96ff 75%, #ff6bcd 100%);
+    }
+
+    .bg-color-btn .color-label {
+      position: absolute;
+      bottom: -18px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 9px;
+      letter-spacing: 1px;
+      color: var(--gray-light);
+      white-space: nowrap;
+      text-transform: uppercase;
+    }
+
+    .bg-color-wrapper {
+      margin-bottom: 8px;
+      padding-bottom: 24px;
+    }
+
+    #customColorInput {
+      display: none;
+      margin-top: 14px;
+      align-items: center;
+      gap: 12px;
+    }
+
+    #customColorInput.visible { display: flex; }
+
+    #customColorPicker {
+      width: 44px;
+      height: 44px;
+      border: 1px solid var(--border);
+      background: none;
+      cursor: pointer;
+      padding: 2px;
+    }
+
+    #customColorHex {
+      font-size: 12px;
+      letter-spacing: 2px;
+      color: var(--gray-light);
+      text-transform: uppercase;
+    }
+
+    /* API Key input */
+    .apikey-wrap {
+      margin-bottom: 28px;
+      border: 1px solid var(--border);
+      padding: 20px 24px;
+      background: var(--gray-dark);
+    }
+
+    .apikey-label {
+      display: block;
+      font-size: 10px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--gray-light);
+      margin-bottom: 12px;
+    }
+
+    .apikey-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .apikey-input {
+      flex: 1;
+      min-width: 200px;
+      background: var(--black);
+      border: 1px solid var(--border);
+      color: var(--white);
+      font-family: 'Courier Prime', monospace;
+      font-size: 13px;
+      padding: 10px 14px;
+      letter-spacing: 1px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .apikey-input:focus { border-color: var(--white); }
+    .apikey-input::placeholder { color: var(--border); }
+
+    .apikey-toggle {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--gray-light);
+      padding: 10px 12px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      transition: all 0.2s;
+    }
+
+    .apikey-toggle:hover { border-color: var(--white); color: var(--white); }
+
+    .apikey-link {
+      font-size: 10px;
+      letter-spacing: 2px;
+      color: var(--gray-light);
+      text-decoration: none;
+      text-transform: uppercase;
+      border-bottom: 1px dashed var(--border);
+      padding-bottom: 2px;
+      transition: color 0.2s;
+    }
+
+    .apikey-link:hover { color: var(--white); }
+
+    .apikey-hint {
+      font-size: 10px;
+      letter-spacing: 1px;
+      color: var(--border);
+      margin-top: 8px;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      header, .hero, .upload-section, .preview-section, .results-section, footer {
+        padding-left: 24px;
+        padding-right: 24px;
+      }
+      .hero { grid-template-columns: 1fr; }
+      .preview-grid { grid-template-columns: 1fr; }
+      .passport-grid { grid-template-columns: repeat(3, 1fr); gap: 10px; }
+      .download-bar { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="logo">
+      <span class="logo-zero">Zero's</span>
+      <span class="logo-main">Passport Size</span>
+      <span class="logo-sub">Image Maker</span>
+    </div>
+    <div class="header-badge">Est. 2025 · Free Tool</div>
+  </header>
+
+  <section class="hero">
+    <div class="hero-text">
+      <h1>
+        Professional
+        <span>passport photos,</span>
+        instantly.
+      </h1>
+      <p>Upload your photo, remove the background, and receive 9 perfectly sized passport images — ready to print or download. No apps. No accounts. No cost.</p>
+    </div>
+    <div class="hero-stats">
+      <div class="stat-row">
+        <div class="stat-num">9</div>
+        <div class="stat-label">Passport-size photos<br>per download sheet</div>
+      </div>
+      <div class="stat-row">
+        <div class="stat-num">BG</div>
+        <div class="stat-label">Auto background<br>removal included</div>
+      </div>
+      <div class="stat-row">
+        <div class="stat-num">2×2</div>
+        <div class="stat-label">Standard passport<br>inch dimensions</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Upload -->
+  <section class="upload-section" id="uploadSection">
+    <div class="section-label">Step 01 — Upload</div>
+
+    <!-- remove.bg API Key -->
+    <div class="apikey-wrap">
+      <label class="apikey-label" for="removeBgKey">
+        <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:6px"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 5.25a3 3 0 013 3m3 0a6 6 0 01-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1121.75 8.25z"/></svg>
+        remove.bg API Key
+      </label>
+      <div class="apikey-row">
+        <input type="password" id="removeBgKey" class="apikey-input" placeholder="Enter your remove.bg API key…" autocomplete="off"/>
+        <button class="apikey-toggle" onclick="toggleKeyVisibility()" id="toggleKeyBtn" title="Show/hide key">
+          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+        </button>
+        <a class="apikey-link" href="https://www.remove.bg/api" target="_blank" rel="noopener">Get free API key ↗</a>
+      </div>
+      <div class="apikey-hint">Your key is never stored or sent anywhere except directly to remove.bg</div>
+    </div>
+    <div class="upload-zone" id="uploadZone">
+      <input type="file" id="fileInput" accept="image/*"/>
+      <div class="upload-icon">
+        <svg fill="none" viewBox="0 0 24 24" stroke-width="1.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/>
+        </svg>
+      </div>
+      <div class="upload-title">Drop your photo here</div>
+      <div class="upload-desc">PNG · JPG · WEBP · Max 20MB</div>
+    </div>
+    <div class="error-msg" id="errorMsg"></div>
+  </section>
+
+  <!-- Preview & Controls -->
+  <section class="preview-section" id="previewSection">
+    <div class="section-label">Step 02 — Configure</div>
+    <div class="preview-grid">
+      <div>
+        <div class="original-preview">
+          <img id="originalImg" src="" alt="Original"/>
+          <div class="original-label">Original photo</div>
+        </div>
+      </div>
+      <div class="controls">
+        <div class="control-title">Choose Print Format</div>
+        <div class="control-desc">Select the standard passport photo size for your country, then choose your background color — white, blue, or custom. All sizes produce a crisp image ready for official documents.</div>
+
+        <div class="size-options" id="sizeOptions">
+          <label class="size-option selected">
+            <input type="radio" name="psize" value="us" checked/>
+            <div class="size-indicator"></div>
+            <span class="size-name">USA / Canada</span>
+            <span class="size-dim">2×2 in · 51×51mm</span>
+          </label>
+          <label class="size-option">
+            <input type="radio" name="psize" value="uk"/>
+            <div class="size-indicator"></div>
+            <span class="size-name">UK / Europe</span>
+            <span class="size-dim">35×45mm</span>
+          </label>
+          <label class="size-option">
+            <input type="radio" name="psize" value="pk"/>
+            <div class="size-indicator"></div>
+            <span class="size-name">Pakistan</span>
+            <span class="size-dim">35×45mm</span>
+          </label>
+          <label class="size-option">
+            <input type="radio" name="psize" value="au"/>
+            <div class="size-indicator"></div>
+            <span class="size-name">Australia</span>
+            <span class="size-dim">35×45mm</span>
+          </label>
+        </div>
+
+        <!-- Background Color Picker -->
+        <div class="bg-color-wrapper">
+          <span class="bg-picker-label">Background Color</span>
+          <div class="bg-color-options" id="bgColorOptions">
+            <div class="bg-color-btn active" data-color="white" title="White">
+              <span class="color-label">White</span>
+            </div>
+            <div class="bg-color-btn" data-color="blue" title="Passport Blue">
+              <span class="color-label">Blue</span>
+            </div>
+            <div class="bg-color-btn" data-color="lightblue" title="Light Blue">
+              <span class="color-label">Lt. Blue</span>
+            </div>
+            <div class="bg-color-btn" data-color="gray" title="Gray">
+              <span class="color-label">Gray</span>
+            </div>
+            <div class="bg-color-btn" data-color="custom" title="Custom Color">
+              <span class="color-label">Custom</span>
+            </div>
+          </div>
+          <div id="customColorInput">
+            <input type="color" id="customColorPicker" value="#ff6bcd"/>
+            <span id="customColorHex">#ff6bcd</span>
+          </div>
+        </div>
+
+        <div>
+          <div id="progressWrap" style="display:none;">
+            <div class="progress-bar-wrap">
+              <div class="progress-bar-fill" id="progressFill"></div>
+            </div>
+            <div class="progress-text" id="progressText">Initializing…</div>
+          </div>
+          <button class="btn-process" id="processBtn" onclick="processImage()">
+            Remove Background & Generate
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Results -->
+  <section class="results-section" id="resultsSection">
+    <div class="section-label">Step 03 — Download</div>
+
+    <div class="passport-grid" id="passportGrid"></div>
+
+    <div class="sheet-container">
+      <div class="sheet-label">Print Sheet — 9 Photos on A4</div>
+      <canvas id="passportSheet"></canvas>
+    </div>
+
+    <div class="download-bar">
+      <button class="btn-download primary" onclick="downloadSheet()">⬇ Download Print Sheet</button>
+      <button class="btn-download" onclick="downloadIndividual()">⬇ Download Individual Photos (ZIP)</button>
+      <button class="btn-reset" onclick="resetAll()">↺ Start Over</button>
+    </div>
+  </section>
+
+  <canvas id="bgCanvas"></canvas>
+  <canvas id="outputCanvas"></canvas>
+
+  <footer>
+    <div class="footer-text">Zero's Tools · All processing is local · No data stored</div>
+    <div class="footer-brand">Passport Size Image Maker</div>
+  </footer>
+
+  <!-- JSZip for ZIP download -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+  <script>
+    let originalImage = null;
+    let processedDataURL = null;
+    let passportDataURLs = [];
+    let selectedBgColor = '#ffffff';
+
+    const BG_COLORS = {
+      white:     '#ffffff',
+      blue:      '#4a90d9',
+      lightblue: '#add8e6',
+      gray:      '#c0c0c0',
+    };
+
+    // Background color picker logic
+    document.querySelectorAll('.bg-color-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.bg-color-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const colorKey = btn.dataset.color;
+        const customInput = document.getElementById('customColorInput');
+        if (colorKey === 'custom') {
+          customInput.classList.add('visible');
+          selectedBgColor = document.getElementById('customColorPicker').value;
+        } else {
+          customInput.classList.remove('visible');
+          selectedBgColor = BG_COLORS[colorKey];
+        }
+      });
+    });
+
+    document.getElementById('customColorPicker').addEventListener('input', e => {
+      selectedBgColor = e.target.value;
+      document.getElementById('customColorHex').textContent = e.target.value.toUpperCase();
+    });
+
+    const SIZES = {
+      us: { w: 600, h: 600, label: '2×2in (USA)' },
+      uk: { w: 413, h: 531, label: '35×45mm (UK)' },
+      pk: { w: 413, h: 531, label: '35×45mm (Pakistan)' },
+      au: { w: 413, h: 531, label: '35×45mm (AU)' },
+    };
+
+    // Drag & drop
+    const zone = document.getElementById('uploadZone');
+    zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragover'); });
+    zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
+    zone.addEventListener('drop', e => {
+      e.preventDefault();
+      zone.classList.remove('dragover');
+      const file = e.dataTransfer.files[0];
+      if (file) handleFile(file);
+    });
+
+    document.getElementById('fileInput').addEventListener('change', e => {
+      if (e.target.files[0]) handleFile(e.target.files[0]);
+    });
+
+    // Size selector highlight
+    document.querySelectorAll('.size-option').forEach(opt => {
+      opt.addEventListener('click', () => {
+        document.querySelectorAll('.size-option').forEach(o => o.classList.remove('selected'));
+        opt.classList.add('selected');
+      });
+    });
+
+    function handleFile(file) {
+      if (!file.type.startsWith('image/')) { showError('Please upload an image file (JPG, PNG, WEBP).'); return; }
+      if (file.size > 20 * 1024 * 1024) { showError('File too large. Please use an image under 20MB.'); return; }
+      hideError();
+      const reader = new FileReader();
+      reader.onload = e => {
+        const img = new Image();
+        img.onload = () => {
+          originalImage = img;
+          document.getElementById('originalImg').src = e.target.result;
+          document.getElementById('previewSection').classList.add('visible');
+          document.getElementById('resultsSection').classList.remove('visible');
+          document.getElementById('processBtn').disabled = false;
+          document.getElementById('uploadSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function setProgress(pct, text) {
+      document.getElementById('progressFill').style.width = pct + '%';
+      document.getElementById('progressText').textContent = text;
+    }
+
+    function toggleKeyVisibility() {
+      const inp = document.getElementById('removeBgKey');
+      inp.type = inp.type === 'password' ? 'text' : 'password';
+    }
+
+    async function processImage() {
+      const apiKey = document.getElementById('removeBgKey').value.trim();
+      if (!apiKey) { showError('Please enter your remove.bg API key first. Get a free key at remove.bg/api'); return; }
+      if (!originalImage) return;
+
+      const btn = document.getElementById('processBtn');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span>Processing...';
+      hideError();
+
+      const progressWrap = document.getElementById('progressWrap');
+      progressWrap.style.display = 'block';
+      setProgress(10, 'Preparing image…');
+
+      try {
+        // Convert original image to a Blob
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = originalImage.width;
+        tempCanvas.height = originalImage.height;
+        tempCanvas.getContext('2d').drawImage(originalImage, 0, 0);
+
+        setProgress(25, 'Sending to remove.bg…');
+        const blob = await new Promise(res => tempCanvas.toBlob(res, 'image/png'));
+
+        const formData = new FormData();
+        formData.append('image_file', blob, 'photo.png');
+        formData.append('size', 'auto');
+
+        const response = await fetch('https://api.remove.bg/v1.0/removebg', {
+          method: 'POST',
+          headers: { 'X-Api-Key': apiKey },
+          body: formData,
+        });
+
+        if (!response.ok) {
+          const errData = await response.json().catch(() => ({}));
+          const msg = errData?.errors?.[0]?.title || `remove.bg error (${response.status})`;
+          throw new Error(msg);
+        }
+
+        setProgress(60, 'Background removed! Composing photos…');
+
+        const resultBlob = await response.blob();
+        const resultURL = URL.createObjectURL(resultBlob);
+
+        // Load the transparent PNG returned by remove.bg
+        const bgRemovedImg = await loadImage(resultURL);
+
+        // Get selected size
+        const sizeKey = document.querySelector('input[name="psize"]:checked').value;
+        const size = SIZES[sizeKey];
+
+        // Draw onto output canvas with chosen background color
+        passportDataURLs = [];
+        const outCanvas = document.getElementById('outputCanvas');
+        const outCtx = outCanvas.getContext('2d');
+        outCanvas.width = size.w;
+        outCanvas.height = size.h;
+
+        outCtx.fillStyle = selectedBgColor;
+        outCtx.fillRect(0, 0, size.w, size.h);
+
+        // Scale & center — bottom-align like passport photos
+        const sc = Math.min(size.w / bgRemovedImg.width, size.h / bgRemovedImg.height) * 0.97;
+        const dw = bgRemovedImg.width * sc;
+        const dh = bgRemovedImg.height * sc;
+        const dx = (size.w - dw) / 2;
+        const dy = size.h - dh;
+        outCtx.drawImage(bgRemovedImg, dx, Math.max(0, dy), dw, Math.min(dh, size.h));
+
+        processedDataURL = outCanvas.toDataURL('image/png');
+        for (let i = 0; i < 9; i++) passportDataURLs.push(processedDataURL);
+
+        setProgress(85, 'Composing print sheet…');
+        await sleep(80);
+
+        renderGrid(size);
+        renderSheet(size);
+
+        setProgress(100, 'Done!');
+        await sleep(400);
+
+        progressWrap.style.display = 'none';
+        btn.disabled = false;
+        btn.innerHTML = 'Remove Background & Generate';
+        document.getElementById('resultsSection').classList.add('visible');
+        document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth' });
+
+      } catch (err) {
+        progressWrap.style.display = 'none';
+        btn.disabled = false;
+        btn.innerHTML = 'Remove Background & Generate';
+        showError('Error: ' + err.message);
+      }
+    }
+
+    function loadImage(src) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = reject;
+        img.src = src;
+      });
+    }
+
+    function renderGrid(size) {
+      const grid = document.getElementById('passportGrid');
+      grid.innerHTML = '';
+      passportDataURLs.forEach((url, i) => {
+        const card = document.createElement('div');
+        card.className = 'passport-card';
+        card.innerHTML = `
+          <img src="${url}" alt="Passport ${i+1}" style="aspect-ratio:${size.w}/${size.h};object-fit:cover;"/>
+          <div class="passport-card-footer">
+            <span class="passport-card-num">Photo ${String(i+1).padStart(2,'0')}</span>
+            <span class="passport-card-num">${size.label || ''}</span>
+          </div>`;
+        grid.appendChild(card);
+      });
+    }
+
+    function renderSheet(size) {
+      // A4 at 300 DPI: 2480 × 3508 px
+      const sheetW = 2480, sheetH = 3508;
+      const margin = 80;
+      const gap = 30;
+      const cols = 3, rows = 3;
+      const cellW = (sheetW - margin * 2 - gap * (cols - 1)) / cols;
+      const cellH = (sheetH - margin * 2 - gap * (rows - 1)) / rows;
+      const photoW = Math.min(cellW, cellH * size.w / size.h);
+      const photoH = photoW * size.h / size.w;
+
+      const sheet = document.getElementById('passportSheet');
+      const ctx = sheet.getContext('2d');
+      // Display at 1/4 scale
+      const scale = 0.25;
+      sheet.width = sheetW * scale;
+      sheet.height = sheetH * scale;
+      ctx.scale(scale, scale);
+
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, sheetW, sheetH);
+
+      // Grid lines
+      ctx.strokeStyle = '#cccccc';
+      ctx.lineWidth = 2;
+
+      const img = new Image();
+      img.onload = () => {
+        let n = 0;
+        for (let r = 0; r < rows; r++) {
+          for (let c = 0; c < cols; c++) {
+            const x = margin + c * (cellW + gap) + (cellW - photoW) / 2;
+            const y = margin + r * (cellH + gap) + (cellH - photoH) / 2;
+            ctx.strokeRect(x, y, photoW, photoH);
+            ctx.drawImage(img, x, y, photoW, photoH);
+            n++;
+            if (n >= 9) break;
+          }
+        }
+        // Crop marks
+        ctx.strokeStyle = '#999';
+        ctx.lineWidth = 3;
+        for (let r = 0; r < rows; r++) {
+          for (let c = 0; c < cols; c++) {
+            const x = margin + c * (cellW + gap) + (cellW - photoW) / 2;
+            const y = margin + r * (cellH + gap) + (cellH - photoH) / 2;
+            drawCropMark(ctx, x, y, 20);
+            drawCropMark(ctx, x + photoW, y, 20);
+            drawCropMark(ctx, x, y + photoH, 20);
+            drawCropMark(ctx, x + photoW, y + photoH, 20);
+          }
+        }
+      };
+      img.src = processedDataURL;
+    }
+
+    function drawCropMark(ctx, x, y, len) {
+      ctx.beginPath(); ctx.moveTo(x - len, y); ctx.lineTo(x + len, y); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(x, y - len); ctx.lineTo(x, y + len); ctx.stroke();
+    }
+
+    function downloadSheet() {
+      const sheetCanvas = document.getElementById('passportSheet');
+      // Re-render at full resolution for download
+      const size = SIZES[document.querySelector('input[name="psize"]:checked').value];
+      const sheetW = 2480, sheetH = 3508;
+      const fullCanvas = document.createElement('canvas');
+      fullCanvas.width = sheetW; fullCanvas.height = sheetH;
+      const ctx = fullCanvas.getContext('2d');
+      ctx.fillStyle = selectedBgColor; ctx.fillRect(0, 0, sheetW, sheetH);
+      const margin = 80, gap = 30, cols = 3, rows = 3;
+      const cellW = (sheetW - margin * 2 - gap * (cols - 1)) / cols;
+      const cellH = (sheetH - margin * 2 - gap * (rows - 1)) / rows;
+      const photoW = Math.min(cellW, cellH * size.w / size.h);
+      const photoH = photoW * size.h / size.w;
+      const img = new Image(); img.onload = () => {
+        for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
+          const x = margin + c * (cellW + gap) + (cellW - photoW) / 2;
+          const y = margin + r * (cellH + gap) + (cellH - photoH) / 2;
+          ctx.drawImage(img, x, y, photoW, photoH);
+          ctx.strokeStyle = '#ccc'; ctx.lineWidth = 2;
+          ctx.strokeRect(x, y, photoW, photoH);
+        }
+        const a = document.createElement('a');
+        a.download = 'zeros_passport_sheet.png';
+        a.href = fullCanvas.toDataURL('image/png');
+        a.click();
+      };
+      img.src = processedDataURL;
+    }
+
+    async function downloadIndividual() {
+      if (typeof JSZip === 'undefined') { alert('JSZip not loaded. Please try downloading the sheet.'); return; }
+      const zip = new JSZip();
+      const folder = zip.folder('zeros_passport_photos');
+      passportDataURLs.forEach((url, i) => {
+        const base64 = url.split(',')[1];
+        folder.file(`passport_photo_${String(i+1).padStart(2,'0')}.png`, base64, { base64: true });
+      });
+      const blob = await zip.generateAsync({ type: 'blob' });
+      const a = document.createElement('a');
+      a.download = 'zeros_passport_photos.zip';
+      a.href = URL.createObjectURL(blob);
+      a.click();
+    }
+
+    function resetAll() {
+      originalImage = null;
+      processedDataURL = null;
+      passportDataURLs = [];
+      document.getElementById('fileInput').value = '';
+      document.getElementById('originalImg').src = '';
+      document.getElementById('passportGrid').innerHTML = '';
+      document.getElementById('previewSection').classList.remove('visible');
+      document.getElementById('resultsSection').classList.remove('visible');
+      document.getElementById('uploadSection').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function showError(msg) {
+      const el = document.getElementById('errorMsg');
+      el.textContent = msg;
+      el.classList.add('visible');
+    }
+
+    function hideError() {
+      document.getElementById('errorMsg').classList.remove('visible');
+    }
+
+    function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+  </script>
+</body>
+</html>
